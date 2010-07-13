@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          USConfig's Sample - Localize
+// @name          USConfig's Sample - I18n
 // @description   USConfig's Sample
 // @namespace     http://d.hatena.ne.jp/h1mesuke/
 // @author        h1mesuke
@@ -132,7 +132,7 @@ Config.define('usc_localize', function() { with (this.builder) {
 }}, {
   aftersave: function() {
     GM_log("\nthis = " + this.toSource());
-    var msg = _('saved_msg');
+    var msg = Config.locale.localizedString('saved_msg');
     for (var id in this.settings) {
       msg = msg + id + " = " + this.settings[id] + "\n";
     }
@@ -140,7 +140,7 @@ Config.define('usc_localize', function() { with (this.builder) {
   },
 });
 
-GM_registerMenuCommand("USConfig Sample - Localize", Config.open);
+GM_registerMenuCommand("USConfig Sample - I18n", Config.open);
 if (autoOpen) window.addEventListener('load', function() { Config.open(); }, false);
 
 // vim: filetype=javascript
