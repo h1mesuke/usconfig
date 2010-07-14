@@ -53,7 +53,7 @@ Config.locale.addTranslation('ja', {
   'saved_msg'    : "保存された設定値は以下の通りです。\n\n",
 });
 
-Config.define('usc_localize', function() { with (this.builder) {
+Config.define('usc_i18n', function() { with (this.builder) {
   var systems = ["BSD", "Linux", "Mac", "Windows"];
   var dists = ["CentOS", "Debian", "Fedora", "Ubuntu"];
 
