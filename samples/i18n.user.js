@@ -131,7 +131,6 @@ Config.define('usc_localize', function() { with (this.builder) {
   );
 }}, {
   aftersave: function() {
-    GM_log("\nthis = " + this.toSource());
     var msg = Config.locale.localizedString('saved_msg');
     for (var id in this.settings) {
       msg = msg + id + " = " + this.settings[id] + "\n";

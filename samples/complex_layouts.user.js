@@ -82,7 +82,6 @@ Config.define('usc_complex_layouts', function() { with (this.builder) {
   );
 }}, {
   aftersave: function() {
-    GM_log("\nthis = " + this.toSource());
     var msg = "Seved settings are:\n\n";
     for (var id in this.settings) {
       msg = msg + id + " = " + this.settings[id] + '\n';
