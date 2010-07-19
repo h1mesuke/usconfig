@@ -26,46 +26,19 @@ var Config = {
 
   // Defines a config dialog with the given name.
   //
-  // == Build Function
-  //
-  // todo
-  //
-  // == Callbacks
-  //
-  // The following six callbacks are available. If a before(open|close|save)
-  // callback function returns false, (opening|closing) the dialog or saving
-  // the settings is canceled.
-  //
-  // * (before|after)open
-  // * (before|after)save
-  // * (before|after)close
-  //
-  // == Example
-  //
-  //  Config.define('dialog_name', function() { with (this.builder) {
-  //    dialog(
-  //      "title",
-  //      { width: 500, height:400 }
-  //      section(...),
-  //      section(...)
-  //    );
-  //  }}, {
-  //    beforesave: function() {...},
-  //  });
-  //
-  define: function(name, buildFunc, attrs) {
-    this.dialogs[name] = new Config.Dialog(name, buildFunc, attrs);
+  define: function(name, buildFunc, opts) {
+    this.dialogs[name] = new Config.Dialog(name, buildFunc, opts);
     if (!this.__first_defined__) this.__first_defined__ = name;
   },
 
-  Dialog: function(name, buildFunc, attrs) {
+  Dialog: function(name, buildFunc, opts) {
     this.name = name;
     this._build = buildFunc;
     this.builder = new Config.Builder(this);
-    attrs = (attrs || {});
-    this.saveKey = (attrs.saveKey || name + '_config_data');
-    delete attrs.saveKey;
-    this.callbacks = attrs;
+    opts = (opts || {});
+    this.saveKey = (opts.saveKey || name + '_config_data');
+    delete opts.saveKey;
+    this.callbacks = opts;
 
     this.defaults  = {};
     this.settings  = {};
@@ -76,19 +49,7 @@ var Config = {
     this._dialog = dlg;
   },
 
-  // Opens a dialog with the given name. If _name_ is omitted, the first
-  // defined dialog is assumed.
-  //
-  // == Examples
-  //
-  //  // single dialog
-  //  GM_registerMenuCommand("Config MyScript...", Config.open);
-  //
-  //  // multiple dialogs
-  //  GM_registerMenuCommand("Config MyScript's module A...",
-  //    function() { Config.open('my_script_mod_a'); });
-  //  GM_registerMenuCommand("Config MyScript's module B...",
-  //    function() { Config.open('my_script_mod_b'); });
+  // Opens a dialog with the given name.
   //
   open: function(name) { Config._open(name) },
 
@@ -101,12 +62,7 @@ var Config = {
   },
 
   // Loads the settings associated with the dialog of the given name from the
-  // local storage. If _name_ is omitted, the first defined dialog's name is
-  // assumed.
-  //
-  // == Example
-  //
-  //  var settings = Config.load();
+  // local storage.
   //
   load: function(name) {
     name = (name || this.__first_defined__);
@@ -144,7 +100,7 @@ var Config = {
 };
 
 //---------------------------------------------------------------------------
-// Localization
+// I18n
 
 Config.locale = {
 
@@ -210,16 +166,6 @@ Config.Dialog.theme = {
 var bp = Config.Builder.prototype;
 
 // Creates the config dialog.
-//
-// == Example
-//
-//  dialog(
-//    "User Script's Settings",
-//    { width: 500, height: 400 },
-//    section(...),
-//    section(...),
-//    null
-//  );
 //
 bp.dialog = function(title /* , [attrs,] sections... */) {
   // exclusive control
@@ -379,25 +325,7 @@ bp.section = function(title /*, [desc,] grids... */) {
 };
 
 // Creates a grid, which is a table element for layouting a group of fields
-// nicely. In each column of a grid, right sides of labels or left sides of
-// controls are aligned.
-//
-// String value '\n' in _fields_ has a special meaning for grid(). If it
-// appers in _fields_, grid() breaks the current table row and creates a new
-// one. See the example below, it creates a grid of two rows each of them has
-// two checkboxes.
-//
-// Grids can be nested.
-//
-// == Example
-//
-//  grid(
-//    checkbox("AAA", 'aaa', true ),
-//    checkbox("BBB", 'bbb', false ), '\n',
-//    checkbox("CCC", 'ccc', false),
-//    checkbox("DDD", 'ddd', true ),
-//    null
-//  )
+// nicely.
 //
 bp.grid = function(/* [attrs,] fields... */) {
   var args = this._parse(arguments, 0);
