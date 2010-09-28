@@ -1,7 +1,7 @@
 // = USConfig
 //
 // User Script's Config dialog library
-// version 1.0.0
+// version 1.0.1
 //
 // == Description
 //
@@ -40,8 +40,8 @@ var Config = {
     delete opts.saveKey;
     this.callbacks = opts;
 
-    this.defaults  = {};
-    this.settings  = {};
+    this.defaults = {};
+    this.settings = {};
     this.frame = null;
   },
 
@@ -70,6 +70,17 @@ var Config = {
     if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
     dlg.load();
     return dlg.settings;
+  },
+
+  // Saves the settings associated with the dialog of the given name to the
+  // local storage.
+  //
+  save: function(settings, name) {
+    name = (name || this.__first_defined__);
+    var dlg = this.dialogs[name];
+    if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
+    dlg.settings = settings;
+    dlg.save();
   },
 
   center: function(frame) {
@@ -161,11 +172,11 @@ Config.Dialog.theme = {
 };
 
 //---------------------------------------------------------------------------
-// Builder Functions
+// Builder
 
 var bp = Config.Builder.prototype;
 
-// Creates the config dialog.
+// Creates a config dialog.
 //
 bp.dialog = function(title /* , [attrs,] sections... */) {
   // exclusive control
@@ -297,7 +308,7 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
 //
 bp.section = function(title /*, [desc,] grids... */) {
   var args = this._parse(arguments, 1);
-  var desc  = args.str;
+  var desc = args.str;
   var grids = args.elems;
 
   var sect = this._create('div', { klass : 'section' });
@@ -961,10 +972,10 @@ bp._style = function(theme, gap) {
   return css;
 };
 
-bp = null;
+delete bp;
 
 //---------------------------------------------------------------------------
-// Dialog's Methods
+// Dialog
 
 var dp = Config.Dialog.prototype;
 
@@ -1116,7 +1127,7 @@ dp.callback = function(evt, arg) {
   }
 };
 
-dp = null;
+delete dp;
 
 //---------------------------------------------------------------------------
 // Utility
