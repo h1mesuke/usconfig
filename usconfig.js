@@ -554,7 +554,7 @@ bp._text = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc] 
   var text = this._create('input', attrs);
   label = this._label(id, label);
 
-  if (labelPos == 'hide') {
+  if (/^hid(e|den)$/.test(labelPos)) {
     return this._cells(text);
   } else {
     return this._cells(label, text);
@@ -607,7 +607,7 @@ bp.textarea = function(label, id, _default /* , [attrs,] [tooltip,] [validateFun
   label = this._label(id, label);
 
   var cells = [];
-  if (labelPos == 'hide') {
+  if (/^hid(e|den)$/.test(labelPos)) {
     return this._cells(text);
   } else if (labelPos == 'top') {
     label.className += ' top';
