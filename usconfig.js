@@ -1152,7 +1152,6 @@ Config.Util = {
   // lines. The returned lines doesn't include any blank lines.
   //
   getLines: function(str) {
-    GM_log("\nstr = " + str);
     var raw_lines = str.split("\n");
     var ret_lines = [];
     for (var i = 0; i < raw_lines.length; i++) {
