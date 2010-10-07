@@ -66,9 +66,22 @@ var Config = {
   //
   load: function(name) {
     name = (name || this.__first_defined__);
+    var settings;
     var dlg = this.dialogs[name];
     if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
+
     dlg.load();
+    if (!/:/.test(dlg.settings.toSource())) {
+      // the first time
+      dlg.build();
+      // use the defaults
+      for (var id in dlg.defaults) {
+        dlg.settings[id] = dlg.defaults[id];
+      }
+    }
+    Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS LOADED for \"" + name + "\"\n" +
+      dlg.settings.toSource());
+
     return dlg.settings;
   },
 
@@ -219,9 +232,8 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
       'border: 4px solid #999999; ' + attrs.theme.bg_color + '; overflow: auto;',
   });
   document.body.appendChild(frame);
-  // NOTE: appendChild() fires a load event on the frame, but it should be
-  // ignored at this point because the contentDocument of the frame hasn't
-  // created yet...
+  // NOTE: This line's appendChild() fires a load event on the frame. But, it
+  // will be ignored because the contentDocument of the frame hasn't created yet.
 
   var style = this._create('style', {
     type  : 'text/css',
@@ -282,11 +294,14 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
   }
   dcon.appendChild(btns);
 
-  frame.addEventListener('load', function() {
-    // NOTE: triggered by Dialog's show() method
-    Config.debug && GM_log("\nUSCONFIG: DEBUG: LOAD EVENT for " + this);
-    var head = this.contentDocument.getElementsByTagName('head')[0];
-    var body = this.contentDocument.body;
+  // closure
+  dlg._show = function() {
+    // NOTE: This function will be triggered by Dialog's show() method by
+    // setting the src attribute of the frame to "about:blank".
+    Config.debug && GM_log("\nUSCONFIG: DEBUG: LOAD EVENT for " + frame);
+    // now, the frame has its contentDocument
+    var head = frame.contentDocument.getElementsByTagName('head')[0];
+    var body = frame.contentDocument.body;
     head.appendChild(style);
     body.style.margin  = '0';
     body.style.padding = '0';
@@ -297,11 +312,11 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
       dlg.remove();
       return;
     }
-    this.style.display = 'block';
+    frame.style.display = 'block';
     dlg.center();
-    this.style.opacity = '1';
+    frame.style.opacity = '1';
     dlg.callback('afteropen');
-  }, false);
+  };
 };
 
 // Creates a section.
@@ -988,8 +1003,6 @@ dp.build = function() {
 
 dp.load = function() {
   this.settings = eval(GM_getValue(this.saveKey, '({})'));
-  Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS LOADED for \"" + this.name + "\"\n" +
-    this.settings.toSource());
 };
 
 dp.save = function() {
@@ -998,7 +1011,8 @@ dp.save = function() {
 
 dp.show = function() {
   if (!this.frame) return;
-  this.frame.src = "about:blank";
+  this.frame.addEventListener('load', this._show, false);
+  this.frame.src = "about:blank"; // fire
 };
 
 dp.center = function() {
@@ -1138,6 +1152,7 @@ Config.Util = {
   // lines. The returned lines doesn't include any blank lines.
   //
   getLines: function(str) {
+    GM_log("\nstr = " + str);
     var raw_lines = str.split("\n");
     var ret_lines = [];
     for (var i = 0; i < raw_lines.length; i++) {
