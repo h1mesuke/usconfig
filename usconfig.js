@@ -44,27 +44,25 @@ var Config = {
   },
 
   // Loads the settings associated with the dialog of the given name from the
-  // local storage.
+  // local storage. If there's any new key whose value hasn't been saved, the
+  // default value will be returned. Therefore, when the first time of
+  // loading, this function will return the defautls.
   //
   load: function(name) {
     name = (name || this.__first_defined__);
-    var settings;
     var dlg = this.dialogs[name];
     if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
 
+    var settings = {};
+    dlg.dummyBuild();
     dlg.load();
-    if (!/:/.test(dlg.settings.toSource())) {
-      // the first time
-      dlg.build();
-      // use the defaults
-      for (var id in dlg.defaults) {
-        dlg.settings[id] = dlg.defaults[id];
-      }
-    }
-    Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS LOADED for \"" + name + "\"\n" +
-      dlg.settings.toSource());
+    for (var key in dlg.defaults) settings[key] = dlg.defaults[key];
+    for (var key in dlg.settings) settings[key] = dlg.settings[key];
 
-    return dlg.settings;
+    Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS LOADED for \"" + name + "\"\n" +
+      settings.toSource());
+
+    return settings;
   },
 
   // Saves the settings associated with the dialog of the given name to the
@@ -158,7 +156,6 @@ Config.locale = {
 Config.Dialog = function(name, buildFunc, opts) {
   this.name = name;
   this._build = buildFunc;
-  this.builder = new Config.Builder(this);
   opts = (opts || {});
   this.saveKey = (opts.saveKey || name + '_config_data');
   delete opts.saveKey;
@@ -175,6 +172,14 @@ dp.build = function() {
   // clear the defautls every time to detect config id collisions
   this.defaults = {};
   this.load();
+  this.builder = new Config.Builder(this);
+  this._build();
+};
+
+dp.dummyBuild = function() {
+  // clear the defautls every time to detect config id collisions
+  this.defaults = {};
+  this.builder = new Config.DummyBuilder(this);
   this._build();
 };
 
@@ -184,6 +189,9 @@ dp.load = function() {
 
 dp.save = function() {
   GM_setValue(this.saveKey, this.settings.toSource());
+
+  Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS SAVED for \"" + this.name +
+    "\" with SAVEKEY \"" + this.saveKey + "\n" + this.settings.toSource());
 };
 
 dp.show = function() {
@@ -1128,6 +1136,29 @@ bp._style = function(theme, gap) {
 };
 
 delete bp;
+
+//---------------------------------------------------------------------------
+// DummyBuilder
+
+Config.DummyBuilder = function(dlg) {
+  this._dialog = dlg;
+};
+
+Config.DummyBuilder.prototype = new Config.Builder();
+Config.DummyBuilder.prototype.constructor = Config.DummyBuilder;
+
+var dbp = Config.DummyBuilder.prototype;
+
+dbp.nop = function() {};
+dbp.diglog = dbp.section = dbp.grid = dbp.button = dbp.staticText = dbp.nop;
+
+dbp.checkbox = function(label, id, _default) { this._setDefault(id, _default); };
+dbp.text = dbp.integer = dbp.number = dbp.textarea = dbp.checkbox;
+
+dbp.radio = function(label, id, options, _default) { this._setDefault(id, _default); };
+dbp.select = dbp.radio;
+
+delete dbp;
 
 //---------------------------------------------------------------------------
 // Themes
