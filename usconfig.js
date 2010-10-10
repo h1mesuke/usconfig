@@ -1,7 +1,7 @@
 // = USConfig
 //
 // User Script's Config dialog library
-// version 1.0.2
+// version 1.0.3
 //
 // == Description
 //
@@ -29,24 +29,6 @@ var Config = {
   define: function(name, buildFunc, opts) {
     this.dialogs[name] = new Config.Dialog(name, buildFunc, opts);
     if (!this.__first_defined__) this.__first_defined__ = name;
-  },
-
-  Dialog: function(name, buildFunc, opts) {
-    this.name = name;
-    this._build = buildFunc;
-    this.builder = new Config.Builder(this);
-    opts = (opts || {});
-    this.saveKey = (opts.saveKey || name + '_config_data');
-    delete opts.saveKey;
-    this.callbacks = opts;
-
-    this.defaults = {};
-    this.settings = {};
-    this.frame = null;
-  },
-
-  Builder: function(dlg) {
-    this._dialog = dlg;
   },
 
   // Opens a dialog with the given name.
@@ -171,21 +153,179 @@ Config.locale = {
 };
 
 //---------------------------------------------------------------------------
-// Themes
+// Dialog
 
-Config.Dialog.theme = {
-  default : { main_color: '#414141', sub_color: '#efefef' },
-  blue    : { main_color: '#3333cc', sub_color: '#9999ff' },
-  brown   : { main_color: '#990000', sub_color: '#cc6633' },
-  cyan    : { main_color: '#00cccc', sub_color: '#99cccc' },
-  green   : { main_color: '#339933', sub_color: '#99cc00' },
-  magenta : { main_color: '#993399', sub_color: '#cc66cc' },
-  navy    : { main_color: '#333399', sub_color: '#9999cc' },
-  red     : { main_color: '#cc3333', sub_color: '#ff9999' },
+Config.Dialog = function(name, buildFunc, opts) {
+  this.name = name;
+  this._build = buildFunc;
+  this.builder = new Config.Builder(this);
+  opts = (opts || {});
+  this.saveKey = (opts.saveKey || name + '_config_data');
+  delete opts.saveKey;
+  this.callbacks = opts;
+
+  this.defaults = {};
+  this.settings = {};
+  this.frame = null;
 };
+
+var dp = Config.Dialog.prototype;
+
+dp.build = function() {
+  // clear the defautls every time to detect config id collisions
+  this.defaults = {};
+  this.load();
+  this._build();
+};
+
+dp.load = function() {
+  this.settings = eval(GM_getValue(this.saveKey, '({})'));
+};
+
+dp.save = function() {
+  GM_setValue(this.saveKey, this.settings.toSource());
+};
+
+dp.show = function() {
+  if (!this.frame) return;
+  this.frame.addEventListener('load', this._show, false);
+  this.frame.src = "about:blank"; // fire
+};
+
+dp.center = function() {
+  if (!this.frame) return;
+  Config.center(this.frame);
+};
+
+dp.close = function(save) {
+  if (!this.frame) return;
+  if (!this.callback('beforeclose')) return;
+  if (save) {
+    if (!this.callback('beforesave')) return;
+    // collect controls' values to save
+    var settings = {};
+    var type, value;
+    for (id in this.defaults) {
+      var doc = this.frame.contentDocument;
+      var cntl = doc.getElementById('control_' + id);
+      switch (cntl.type) {
+      case 'checkbox': case 'text': case 'textarea':
+        type = cntl.type;
+        break;
+      default:
+        type = cntl.tagName.toLowerCase();
+        break;
+      }
+      switch (type) {
+      case 'checkbox':
+        value = cntl.checked;
+        break;
+      case 'div': // radio buttons are grouped by <div>
+        var radios = cntl.getElementsByTagName('input');
+        for (var i = 0; i < radios.length; i++) {
+          if (radios[i].checked) {
+            value = radios[i].value;
+            break;
+          }
+        }
+        break;
+      case 'select':
+        var options = cntl.getElementsByTagName('option');
+        for (var i = 0; i < options.length; i++) {
+          if (options[i].selected) {
+            value = options[i].textContent;
+            break;
+          }
+        }
+        break;
+      case 'text': case 'textarea':
+        value = cntl.value.replace(/^\s*/, '').replace(/\s*$/, '');
+        if (!this.callback('validate_' + id, value)) return; // invalid input
+        if (typeof this.defaults[id] == 'number') value = parseFloat(value);
+        break;
+      }
+      settings[id] = value;
+    }
+    this.settings = settings;
+    this.save();
+    this.callback('aftersave');
+  }
+  this.remove();
+  this.callback('afterclose');
+  if (save && this.autoReload) location.reload();
+};
+
+dp.remove = function() {
+  if (!this.frame) return;
+  Config.remove(this.frame);
+};
+
+dp.reset = function() {
+  if (!this.frame) return;
+  var doc = this.frame.contentDocument;
+  for (id in this.defaults) {
+    var value = this.defaults[id];
+    var cntl = doc.getElementById('control_' + id);
+    switch (cntl.type) {
+    case 'checkbox': case 'text': case 'textarea':
+      type = cntl.type;
+      break;
+    default:
+      type = cntl.tagName.toLowerCase();
+      break;
+    }
+    switch (type) {
+    case 'checkbox':
+      cntl.checked = value;
+      break;
+    case 'div': // radio buttons are grouped by <div>
+      var radios = cntl.getElementsByTagName('input');
+      for (var i = 0; i < radios.length; i++) {
+        if (value == radios[i].value) {
+          radios[i].checked = true;
+          break;
+        }
+      }
+      break;
+    case 'select':
+      var options = cntl.getElementsByTagName('option');
+      for (var i = 0; i < options.length; i++) {
+        if (value == options[i].textContent) {
+          options[i].selected = true;
+          break;
+        }
+      }
+      break;
+    case 'text': case 'textarea':
+      cntl.value = value.toString();
+      break;
+    }
+  }
+};
+
+dp.callback = function(evt, arg) {
+  try {
+    if (this.callbacks[evt]) {
+      return (this.callbacks[evt].call(this, arg) !== false);
+    } else {
+      return true;
+    }
+  } catch (e) {
+    // for more detailed information
+    GM_log("\nUSCONFIG: ERROR: CALLBACK FAILED: " +
+      "\"" + evt + "\" on \"" + this.name + "\"\n" + e);
+    throw e;
+  }
+};
+
+delete dp;
 
 //---------------------------------------------------------------------------
 // Builder
+
+Config.Builder = function(dlg) {
+  this._dialog = dlg;
+};
 
 var bp = Config.Builder.prototype;
 
@@ -990,158 +1130,18 @@ bp._style = function(theme, gap) {
 delete bp;
 
 //---------------------------------------------------------------------------
-// Dialog
+// Themes
 
-var dp = Config.Dialog.prototype;
-
-dp.build = function() {
-  // clear the defautls every time to detect config id collisions
-  this.defaults = {};
-  this.load();
-  this._build();
+Config.Dialog.theme = {
+  default : { main_color: '#414141', sub_color: '#efefef' },
+  blue    : { main_color: '#3333cc', sub_color: '#9999ff' },
+  brown   : { main_color: '#990000', sub_color: '#cc6633' },
+  cyan    : { main_color: '#00cccc', sub_color: '#99cccc' },
+  green   : { main_color: '#339933', sub_color: '#99cc00' },
+  magenta : { main_color: '#993399', sub_color: '#cc66cc' },
+  navy    : { main_color: '#333399', sub_color: '#9999cc' },
+  red     : { main_color: '#cc3333', sub_color: '#ff9999' },
 };
-
-dp.load = function() {
-  this.settings = eval(GM_getValue(this.saveKey, '({})'));
-};
-
-dp.save = function() {
-  GM_setValue(this.saveKey, this.settings.toSource());
-};
-
-dp.show = function() {
-  if (!this.frame) return;
-  this.frame.addEventListener('load', this._show, false);
-  this.frame.src = "about:blank"; // fire
-};
-
-dp.center = function() {
-  if (!this.frame) return;
-  Config.center(this.frame);
-};
-
-dp.close = function(save) {
-  if (!this.frame) return;
-  if (!this.callback('beforeclose')) return;
-  if (save) {
-    if (!this.callback('beforesave')) return;
-    // collect controls' values to save
-    var settings = {};
-    var type, value;
-    for (id in this.defaults) {
-      var doc = this.frame.contentDocument;
-      var cntl = doc.getElementById('control_' + id);
-      switch (cntl.type) {
-      case 'checkbox': case 'text': case 'textarea':
-        type = cntl.type;
-        break;
-      default:
-        type = cntl.tagName.toLowerCase();
-        break;
-      }
-      switch (type) {
-      case 'checkbox':
-        value = cntl.checked;
-        break;
-      case 'div': // radio buttons are grouped by <div>
-        var radios = cntl.getElementsByTagName('input');
-        for (var i = 0; i < radios.length; i++) {
-          if (radios[i].checked) {
-            value = radios[i].value;
-            break;
-          }
-        }
-        break;
-      case 'select':
-        var options = cntl.getElementsByTagName('option');
-        for (var i = 0; i < options.length; i++) {
-          if (options[i].selected) {
-            value = options[i].textContent;
-            break;
-          }
-        }
-        break;
-      case 'text': case 'textarea':
-        value = cntl.value.replace(/^\s*/, '').replace(/\s*$/, '');
-        if (!this.callback('validate_' + id, value)) return; // invalid input
-        if (typeof this.defaults[id] == 'number') value = parseFloat(value);
-        break;
-      }
-      settings[id] = value;
-    }
-    this.settings = settings;
-    this.save();
-    this.callback('aftersave');
-  }
-  this.remove();
-  this.callback('afterclose');
-  if (save && this.autoReload) location.reload();
-};
-
-dp.remove = function() {
-  if (!this.frame) return;
-  Config.remove(this.frame);
-};
-
-dp.reset = function() {
-  if (!this.frame) return;
-  var doc = this.frame.contentDocument;
-  for (id in this.defaults) {
-    var value = this.defaults[id];
-    var cntl = doc.getElementById('control_' + id);
-    switch (cntl.type) {
-    case 'checkbox': case 'text': case 'textarea':
-      type = cntl.type;
-      break;
-    default:
-      type = cntl.tagName.toLowerCase();
-      break;
-    }
-    switch (type) {
-    case 'checkbox':
-      cntl.checked = value;
-      break;
-    case 'div': // radio buttons are grouped by <div>
-      var radios = cntl.getElementsByTagName('input');
-      for (var i = 0; i < radios.length; i++) {
-        if (value == radios[i].value) {
-          radios[i].checked = true;
-          break;
-        }
-      }
-      break;
-    case 'select':
-      var options = cntl.getElementsByTagName('option');
-      for (var i = 0; i < options.length; i++) {
-        if (value == options[i].textContent) {
-          options[i].selected = true;
-          break;
-        }
-      }
-      break;
-    case 'text': case 'textarea':
-      cntl.value = value.toString();
-      break;
-    }
-  }
-};
-
-dp.callback = function(evt, arg) {
-  try {
-    if (this.callbacks[evt]) {
-      return (this.callbacks[evt].call(this, arg) !== false);
-    } else {
-      return true;
-    }
-  } catch (e) {
-    // for more detailed information
-    GM_log("\nUSCONFIG: ERROR: CALLBACK FAILED: " +
-      "\"" + evt + "\" on \"" + this.name + "\"\n" + e);
-    throw e;
-  }
-};
-
-delete dp;
 
 //---------------------------------------------------------------------------
 // Utility
