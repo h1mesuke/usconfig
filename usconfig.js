@@ -1150,7 +1150,7 @@ Config.DummyBuilder.prototype.constructor = Config.DummyBuilder;
 var dbp = Config.DummyBuilder.prototype;
 
 dbp.nop = function() {};
-dbp.diglog = dbp.section = dbp.grid = dbp.button = dbp.staticText = dbp.nop;
+dbp.dialog = dbp.section = dbp.grid = dbp.button = dbp.staticText = dbp.nop;
 
 dbp.checkbox = function(label, id, _default) { this._setDefault(id, _default); };
 dbp.text = dbp.integer = dbp.number = dbp.textarea = dbp.checkbox;
