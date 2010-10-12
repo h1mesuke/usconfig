@@ -4,7 +4,7 @@
 // @namespace     http://d.hatena.ne.jp/h1mesuke/
 // @author        h1mesuke
 // @version       0.0.2
-// @require       http://github.com/h1mesuke/usconfig/raw/v1.10/usconfig.js
+// @require       http://github.com/h1mesuke/usconfig/raw/v1.11/usconfig.js
 // @include       http://*
 // @include       https://*
 // ==/UserScript==
