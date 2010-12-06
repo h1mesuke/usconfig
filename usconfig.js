@@ -184,11 +184,17 @@ dp.dummyBuild = function() {
 };
 
 dp.load = function() {
-  this.settings = eval(GM_getValue(this.saveKey, '({})'));
+  var data = GM_getValue(this.saveKey, '({})');
+  this.settings = window.JSON && window.JSON.parse ?
+				window.JSON.parse(data) :
+				(new Function("return " + data))();
 };
 
 dp.save = function() {
-  GM_setValue(this.saveKey, this.settings.toSource());
+	var data = window.JSON && window.JSON.parse ?
+			window.JSON.stringify(this.settings) :
+			this.settings.toSource();
+  GM_setValue(this.saveKey, data);
 
   Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS SAVED for \"" + this.name +
     "\" with SAVEKEY \"" + this.saveKey + "\n" + this.settings.toSource());
@@ -409,7 +415,7 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
   var dlg  = this._dialog;
   var btns = this._create('div', { klass: 'button_bar' });
   // reset button
-  btns.appendChild(this._create('button', { 
+  btns.appendChild(this._create('button', {
     type  : 'button',
     klass : 'dialog_button',
     id    : 'reset_button',
