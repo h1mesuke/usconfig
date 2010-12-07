@@ -383,7 +383,7 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
     style : 'width: ' + attrs.width + '; height: ' + attrs.height + '; ' +
       'max-width: 95%; max-height: 95%; display: none; opacity: 0; ' +
       'position: fixed; left: 0; top: 0; z-index: 9999; ' +
-      'border: 4px solid #999999; ' + attrs.theme.bg_color + '; overflow: auto;',
+      'border: 4px solid #999999; background: ' + attrs.theme.bg_color + '; overflow: auto;',
   });
   document.body.appendChild(frame);
   // NOTE: This line's appendChild() fires a load event on the frame. But, it
