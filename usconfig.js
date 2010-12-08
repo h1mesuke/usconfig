@@ -208,13 +208,13 @@ dp.load = function() {
   try {
     this.settings = JSON.parse(data);
   } catch(e) {
-    data = "("+data+")";
-    this.settings = (new Function("return " + data))();
+    this.settings = (new Function("return (" + data + ")"))();
+    JSON && JSON.stringify && this.save();
   }
 };
 
 dp.save = function() {
-  var data = (JSON && JSON.parse) ? JSON.stringify(this.settings) : this.settings.toSource();
+  var data = (JSON && JSON.stringify) ? JSON.stringify(this.settings) : this.settings.toSource();
   GM_setValue(this.saveKey, data);
 
   Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS SAVED for \"" + this.name +
