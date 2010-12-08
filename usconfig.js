@@ -201,16 +201,17 @@ dp.dummyBuild = function() {
 };
 
 dp.load = function() {
-  var data = GM_getValue(this.saveKey, '({})');
-  this.settings = JSON && JSON.parse ?
-        JSON.parse(data) :
-        (new Function("return " + data))();
+  var data = GM_getValue(this.saveKey, '{}');
+  try {
+    this.settings = JSON.parse(data);
+  } catch(e) {
+    data = "("+data+")";
+    this.settings = (new Function("return " + data))();
+  }
 };
 
 dp.save = function() {
-  var data = JSON && JSON.parse ?
-      JSON.stringify(this.settings) :
-      this.settings.toSource();
+  var data = (JSON && JSON.parse) ? JSON.stringify(this.settings) : this.settings.toSource();
   GM_setValue(this.saveKey, data);
 
   Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS SAVED for \"" + this.name +
