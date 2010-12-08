@@ -120,6 +120,9 @@ var Config = {
   debug: false,
 };
 
+// alias
+Config.close = Config.remove;
+
 //---------------------------------------------------------------------------
 // I18n
 
