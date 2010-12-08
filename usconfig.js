@@ -138,19 +138,19 @@ Config.locale = {
   translations: {
 
     en: {
-      'Save'            : 'Save',
-      'Cancel'          : 'Cancel',
-      'Reset'           : 'Reset to defaults',
-      'require_integer' : '"${label}" must be an integer.',
-      'require_number'  : '"${label}" must be a number.',
+      'Save'           : 'Save',
+      'Cancel'         : 'Cancel',
+      'Reset'          : 'Reset to defaults',
+      'require_integer': '"${label}" must be an integer.',
+      'require_number' : '"${label}" must be a number.',
     },
 
     ja: {
-      'Save'            : "保存",
-      'Cancel'          : "キャンセル",
-      'Reset'           : "デフォルトに戻す",
-      'require_integer' : "「${label}」には整数を設定して下さい。",
-      'require_number'  : "「${label}」には数値を設定して下さい。",
+      'Save'           : "保存",
+      'Cancel'         : "キャンセル",
+      'Reset'          : "デフォルトに戻す",
+      'require_integer': "「${label}」には整数を設定して下さい。",
+      'require_number' : "「${label}」には数値を設定して下さい。",
     },
   },
 
@@ -209,6 +209,7 @@ dp.load = function() {
     this.settings = JSON.parse(data);
   } catch(e) {
     this.settings = (new Function("return (" + data + ")"))();
+    // try to re-save in JSON immediately
     JSON && JSON.stringify && this.save();
   }
 };
@@ -383,12 +384,12 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
   var _ = Config._;
   var args = this._parse(arguments, 1);
   var attrs = {
-    width      : '75%',
-    height     : '75%',
-    theme      : 'default',
-    gap        : 12,
-    style      : '',
-    autoReload : true,
+    width : '75%',
+    height: '75%',
+    theme : 'default',
+    gap   : 12,
+    style : '',
+    autoReload: true,
   };
   this._merge(attrs, args.attrs);
   if (/\d+$/.test(attrs.width )) attrs.width  += 'px';
@@ -400,8 +401,8 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
 
   // create the dialog frame
   frame = this._dialog.frame = this._create('iframe', {
-    id    : 'usconfig_frame',
-    style : 'width: ' + attrs.width + '; height: ' + attrs.height + '; ' +
+    id   : 'usconfig_frame',
+    style: 'width: ' + attrs.width + '; height: ' + attrs.height + '; ' +
       'max-width: 95%; max-height: 95%; display: none; opacity: 0; ' +
       'position: fixed; left: 0; top: 0; z-index: 9999; ' +
       'border: 4px solid #999999; background: ' + attrs.theme.bg_color + '; overflow: auto;',
@@ -411,19 +412,19 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
   // will be ignored because the contentDocument of the frame hasn't created yet.
 
   var style = this._create('style', {
-    type  : 'text/css',
-    inner : attrs.style,
+    type : 'text/css',
+    inner: attrs.style,
   });
 
   // create the dialog container
   var dcon = this._create('div', {
-    klass : 'dialog_container',
-    id    : this._dialog.name + '_config_dialog',
+    klass: 'dialog_container',
+    id   : this._dialog.name + '_config_dialog',
   });
   // append the dialog's title
   dcon.appendChild(this._create('div', {
-    klass : 'dialog_title',
-    inner : title,
+    klass: 'dialog_title',
+    inner: title,
   }));
 
   // append sections
@@ -437,26 +438,26 @@ bp.dialog = function(title /* , [attrs,] sections... */) {
   var btns = this._create('div', { klass: 'button_bar' });
   // reset button
   btns.appendChild(this._create('button', {
-    type  : 'button',
-    klass : 'dialog_button',
-    id    : 'reset_button',
-    inner : _('Reset'),
-    click : function() { dlg.reset(); },
+    type : 'button',
+    klass: 'dialog_button',
+    id   : 'reset_button',
+    inner: _('Reset'),
+    onclick: function() { dlg.reset(); },
   }));
   // save/cancel buttons
   var saveBtn = this._create('button', {
-    type  : 'button',
-    klass : 'dialog_button',
-    id    : 'save_button',
-    inner : _('Save'),
-    click : function() { dlg.close(true); },
+    type : 'button',
+    klass: 'dialog_button',
+    id   : 'save_button',
+    inner: _('Save'),
+    onclick: function() { dlg.close(true); },
   });
   var cancelBtn = this._create('button', {
-    type  : 'button',
-    klass : 'dialog_button',
-    id    : 'cancel_button',
-    inner : _('Cancel'),
-    click : function() { dlg.close(false); },
+    type : 'button',
+    klass: 'dialog_button',
+    id   : 'cancel_button',
+    inner: _('Cancel'),
+    onclick: function() { dlg.close(false); },
   });
   if (/Win/.test(navigator.platform)) {
     // Windows
@@ -504,16 +505,16 @@ bp.section = function(title /*, [desc,] grids... */) {
   var sect = this._create('div', { klass : 'section' });
   // append the section title
   var sect_title = this._create('div', {
-    klass : 'section_title',
-    inner : title,
+    klass: 'section_title',
+    inner: title,
   });
   sect.appendChild(sect_title);
   // append the section desc
   if (desc && /\S/.test(desc)) {
     var sect_desc = this._create('div', { klass: 'section_desc' });
     sect_desc.appendChild(this._create('p', {
-      style : 'margin: 0px; padding: 0px',
-      inner : desc,
+      style: 'margin: 0px; padding: 0px',
+      inner: desc,
     }));
     sect.appendChild(sect_desc);
   }
@@ -536,8 +537,8 @@ bp.grid = function(/* [attrs,] fields... */) {
   var elems = args.elems;
 
   var gcon = this._create('div', {
-    klass : 'grid_container',
-    style : 'text-align: ' + align + ';',
+    klass: 'grid_container',
+    style: 'text-align: ' + align + ';',
   });
 
   this._merge(attrs, { klass: 'grid' });
@@ -606,11 +607,11 @@ bp.button = function(label, id /* , [attrs,] onclick, [tooltip] */) {
   if (args.str)  attrs.title = args.str;
 
   this._merge(attrs, {
-    type  : 'button',
-    klass : 'button',
-    id    : 'button_' + id,
-    name  : id,
-    inner : label,
+    type : 'button',
+    klass: 'button',
+    id   : 'button_' + id,
+    name : id,
+    inner: label,
   });
   var btn = this._create('button', attrs);
   return this._cells(btn);
@@ -626,12 +627,12 @@ bp.checkbox = function(label, id, _default /* , [attrs,] [tooltip] */) {
   var labelPos = this._pop(attrs, 'label', 'right');
 
   this._merge(attrs, {
-    type  : 'checkbox',
-    klass : 'control',
-    id    : 'control_' + id,
-    name  : id,
-    value : id,
-    check : this._getValue(id, _default),
+    type : 'checkbox',
+    klass: 'control',
+    id   : 'control_' + id,
+    name : id,
+    value: id,
+    checked: this._getValue(id, _default),
   });
   var cbox = this._create('input', attrs);
   label = this._label(id, label);
@@ -668,12 +669,12 @@ bp.radio = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
   for (var i = 0; i < options.length; i++) {
     box.appendChild(this._create('span',  { inner: options[i] }));
     box.appendChild(this._create('input', {
-      type  : 'radio',
-      klass : 'radio_' + id,
-      id    : 'radio_' + id + '_' + (i + 1),
-      name  : id,
-      value : options[i],
-      check : options[i] == value,
+      type : 'radio',
+      klass: 'radio_' + id,
+      id   : 'radio_' + id + '_' + (i + 1),
+      name : id,
+      value: options[i],
+      checked: options[i] == value,
     }));
   }
   return this._cells(label, box);
@@ -688,9 +689,9 @@ bp.select = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
   if (args.str) attrs.title = args.str;
 
   this._merge(attrs, {
-    klass : 'control',
-    id    : 'control_' + id,
-    name  : id,
+    klass: 'control',
+    id   : 'control_' + id,
+    name : id,
   });
   delete attrs.multiple; // not support
   var slct = this._create('select', attrs);
@@ -704,10 +705,10 @@ bp.select = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
   }
   for (var i = 0; i < options.length; i++) {
     slct.appendChild(this._create('option', {
-      klass  : 'option_' + id,
-      id     : 'option_' + id + '_' + (i + 1),
-      text   : options[i],
-      select : options[i] == value,
+      klass: 'option_' + id,
+      id   : 'option_' + id + '_' + (i + 1),
+      text : options[i],
+      selected: options[i] == value,
     }));
   }
   return this._cells(label, slct);
@@ -735,11 +736,11 @@ bp._text = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc] 
   if (args.func) this._dialog.callbacks['validate_' + id] = args.func;
 
   this._merge(attrs, {
-    type  : 'text',
-    klass : 'control',
-    id    : 'control_' + id,
-    name  : id,
-    value : this._getValue(id, _default),
+    type : 'text',
+    klass: 'control',
+    id   : 'control_' + id,
+    name : id,
+    value: this._getValue(id, _default),
   });
   var text = this._create('input', attrs);
   label = this._label(id, label);
@@ -788,10 +789,10 @@ bp.textarea = function(label, id, _default /* , [attrs,] [tooltip,] [validateFun
     (args.func || Config.Builder.validator.forString(label));
 
   this._merge(attrs, {
-    klass : 'control',
-    id    : 'control_' + id,
-    name  : id,
-    value : this._getValue(id, _default),
+    klass: 'control',
+    id   : 'control_' + id,
+    name : id,
+    value: this._getValue(id, _default),
   });
   var text  = this._create('textarea', attrs);
   label = this._label(id, label);
@@ -816,10 +817,10 @@ bp.textarea = function(label, id, _default /* , [attrs,] [tooltip,] [validateFun
 bp._label = function(id, text) {
   if (text) {
     var attrs = {
-      klass : 'label',
-      id    : 'label_' + id,
-      for   : 'control_' + id,
-      inner : text,
+      klass: 'label',
+      id   : 'label_' + id,
+      for  : 'control_' + id,
+      inner: text,
     };
     return this._create('label', attrs);
   } else {
@@ -873,12 +874,12 @@ bp._setAttrs = function(elem, attrs) {
       case "for": case "href": case "id": case "name": case "src": case "style":
         elem.setAttribute(name, value);
         break;
-      case "check" : elem.checked     = value; break;
-      case "inner" : elem.innerHTML   = value; break;
-      case "klass" : elem.className   = value; break;
-      case "select": elem.selected    = value; break;
-      case "text"  : elem.textContent = value; break;
-      case "click" : elem.addEventListener("click", value, false); break;
+      case "checked" : elem.checked     = value; break;
+      case "klass"   : elem.className   = value; break;
+      case "inner"   : elem.innerHTML   = value; break;
+      case "selected": elem.selected    = value; break;
+      case "text"    : elem.textContent = value; break;
+      case "onclick" : elem.addEventListener("click", value, false); break;
       default:
         elem[name] = value;
         break;
@@ -1003,24 +1004,24 @@ bp._theme = function(theme) {
     if (!theme) throw "\nUSCONFIG: ERROR: UNKNOWN THEME: " + name;
   }
   return {
-    bg_color                   : theme.bg_color                   || '#ffffff',
-    fg_color                   : theme.fg_color                   || '#000000',
-    title_border_width         : theme.title_border_width         || 0,
-    title_border_color         : theme.title_border_color         || theme.bg_color || '#ffffff',
-    title_bg_color             : theme.title_bg_color             || theme.bg_color || '#ffffff',
-    title_fg_color             : theme.title_fg_color             || '#ffffff',
-    section_title_border_width : theme.section_title_border_width || 1,
-    section_title_border_color : theme.section_title_border_color || '#aaaaaa',
-    section_title_bg_color     : theme.section_title_bg_color     || theme.main_color,
-    section_title_fg_color     : theme.section_title_fg_color     || '#ffffff',
-    section_desc_border_width  : theme.section_desc_border_width  || 1,
-    section_desc_border_color  : theme.section_desc_border_color  || '#cccccc',
-    section_desc_bg_color      : theme.section_desc_bg_color      || theme.sub_color,
-    section_desc_fg_color      : theme.section_desc_fg_color      || '#474747',
-    button_bar_border_width    : theme.button_bar_border_width    || 1,
-    button_bar_border_color    : theme.button_bar_border_color    || '#cccccc',
-    button_bar_bg_color        : theme.button_bar_bg_color        || theme.sub_color,
-    button_bar_fg_color        : theme.button_bar_fg_color        || theme.fg_color || '#000000',
+    bg_color                  : theme.bg_color                   || '#ffffff',
+    fg_color                  : theme.fg_color                   || '#000000',
+    title_border_width        : theme.title_border_width         || 0,
+    title_border_color        : theme.title_border_color         || theme.bg_color || '#ffffff',
+    title_bg_color            : theme.title_bg_color             || theme.bg_color || '#ffffff',
+    title_fg_color            : theme.title_fg_color             || '#ffffff',
+    section_title_border_width: theme.section_title_border_width || 1,
+    section_title_border_color: theme.section_title_border_color || '#aaaaaa',
+    section_title_bg_color    : theme.section_title_bg_color     || theme.main_color,
+    section_title_fg_color    : theme.section_title_fg_color     || '#ffffff',
+    section_desc_border_width : theme.section_desc_border_width  || 1,
+    section_desc_border_color : theme.section_desc_border_color  || '#cccccc',
+    section_desc_bg_color     : theme.section_desc_bg_color      || theme.sub_color,
+    section_desc_fg_color     : theme.section_desc_fg_color      || '#474747',
+    button_bar_border_width   : theme.button_bar_border_width    || 1,
+    button_bar_border_color   : theme.button_bar_border_color    || '#cccccc',
+    button_bar_bg_color       : theme.button_bar_bg_color        || theme.sub_color,
+    button_bar_fg_color       : theme.button_bar_fg_color        || theme.fg_color || '#000000',
   };
 };
 
@@ -1191,14 +1192,14 @@ delete dbp;
 // Themes
 
 Config.Dialog.theme = {
-  default : { main_color: '#414141', sub_color: '#efefef' },
-  blue    : { main_color: '#3333cc', sub_color: '#9999ff' },
-  brown   : { main_color: '#990000', sub_color: '#cc6633' },
-  cyan    : { main_color: '#00cccc', sub_color: '#99cccc' },
-  green   : { main_color: '#339933', sub_color: '#99cc00' },
-  magenta : { main_color: '#993399', sub_color: '#cc66cc' },
-  navy    : { main_color: '#333399', sub_color: '#9999cc' },
-  red     : { main_color: '#cc3333', sub_color: '#ff9999' },
+  default: { main_color: '#414141', sub_color: '#efefef' },
+  blue   : { main_color: '#3333cc', sub_color: '#9999ff' },
+  brown  : { main_color: '#990000', sub_color: '#cc6633' },
+  cyan   : { main_color: '#00cccc', sub_color: '#99cccc' },
+  green  : { main_color: '#339933', sub_color: '#99cc00' },
+  magenta: { main_color: '#993399', sub_color: '#cc66cc' },
+  navy   : { main_color: '#333399', sub_color: '#9999cc' },
+  red    : { main_color: '#cc3333', sub_color: '#ff9999' },
 };
 
 //---------------------------------------------------------------------------
