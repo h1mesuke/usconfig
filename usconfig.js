@@ -219,7 +219,7 @@ dp.save = function() {
   GM_setValue(this.saveKey, data);
 
   Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS SAVED for \"" + this.name +
-    "\" with SAVEKEY \"" + this.saveKey + "\n" + this.settings.toSource());
+    "\" with SAVEKEY \"" + this.saveKey + "\n" + data);
 };
 
 dp.show = function() {
