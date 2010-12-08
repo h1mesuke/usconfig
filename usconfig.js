@@ -71,7 +71,7 @@ var Config = {
     if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
 
     var settings = {};
-    dlg.dummyBuild();
+    dlg._initDefaults();
     dlg.load();
     for (var key in dlg.defaults) settings[key] = dlg.defaults[key];
     for (var key in dlg.settings) settings[key] = dlg.settings[key];
@@ -194,13 +194,16 @@ dp.build = function() {
   this.load();
   this.builder = new Config.Builder(this);
   this._build();
+  // build the dialog really
 };
 
-dp.dummyBuild = function() {
+dp._initDefaults = function() {
   // clear the defautls every time to detect config id collisions
   this.defaults = {};
   this.builder = new Config.DummyBuilder(this);
   this._build();
+  // NOTE: Most of DummyBuilder's methods are fake and only set each control's
+  // default value to this.defaults.
 };
 
 dp.load = function() {
@@ -1165,7 +1168,7 @@ bp._style = function(theme, gap) {
 
 delete bp;
 
-//---------------------------------------------------------------------------
+//--------------------------------------
 // DummyBuilder
 
 Config.DummyBuilder = function(dlg) {
