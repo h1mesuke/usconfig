@@ -202,15 +202,15 @@ dp.dummyBuild = function() {
 
 dp.load = function() {
   var data = GM_getValue(this.saveKey, '({})');
-  this.settings = window.JSON && window.JSON.parse ?
-				window.JSON.parse(data) :
-				(new Function("return " + data))();
+  this.settings = JSON && JSON.parse ?
+        JSON.parse(data) :
+        (new Function("return " + data))();
 };
 
 dp.save = function() {
-	var data = window.JSON && window.JSON.parse ?
-			window.JSON.stringify(this.settings) :
-			this.settings.toSource();
+  var data = JSON && JSON.parse ?
+      JSON.stringify(this.settings) :
+      this.settings.toSource();
   GM_setValue(this.saveKey, data);
 
   Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS SAVED for \"" + this.name +
