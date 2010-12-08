@@ -5,7 +5,7 @@
 // File    : usconfig.js
 // Author  : h1mesuke <himesuke@gmail.com>
 // Updated : 2010-12-08
-// Version : 1.1.1
+// Version : 1.1.2
 //
 // == Description
 //

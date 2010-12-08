@@ -3,8 +3,8 @@
 // @description   USConfig's Sample
 // @namespace     http://d.hatena.ne.jp/h1mesuke/
 // @author        h1mesuke
-// @version       1.1.1
-// @require       https://github.com/h1mesuke/usconfig/raw/v1.11/usconfig.js
+// @version       1.1.2
+// @require       https://github.com/h1mesuke/usconfig/raw/v1.12/usconfig.js
 // @include       http://*
 // @include       https://*
 // ==/UserScript==
