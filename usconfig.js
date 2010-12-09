@@ -641,7 +641,7 @@ bp.checkbox = function(label, id, _default /* , [attrs,] [tooltip] */) {
     id   : 'control_' + id,
     name : id,
     value: id,
-    checked: this._getValue(id, _default),
+    checked: this._getValue(id),
   });
   var cbox = this._create('input', attrs);
   label = this._label(id, label);
@@ -669,7 +669,7 @@ bp.radio = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
   label = this._label(id, label);
 
   // append radios for each of options
-  var value = this._getValue(id, _default);
+  var value = this._getValue(id);
   if (value == _default && options.indexOf(_default) == -1) {
     GM_log("\nUSCONFIG: WARNING: INVALID DEFAULT VALUE for \"" + id + "\"");
     value = options[0]; // fallback
@@ -705,7 +705,7 @@ bp.select = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
   label = this._label(id, label);
 
   // append options
-  var value = this._getValue(id, _default);
+  var value = this._getValue(id);
   if (value == _default && options.indexOf(_default) == -1) {
     GM_log("\nUSCONFIG: WARNING: INVALID DEFAULT VALUE for \"" + id + "\"");
     value = options[0]; // fallback
@@ -746,7 +746,7 @@ bp._text = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc] 
     klass: 'control',
     id   : 'control_' + id,
     name : id,
-    value: this._getValue(id, _default),
+    value: this._getValue(id),
   });
   var text = this._create('input', attrs);
   label = this._label(id, label);
@@ -797,7 +797,7 @@ bp.textarea = function(label, id, _default /* , [attrs,] [tooltip,] [validateFun
     klass: 'control',
     id   : 'control_' + id,
     name : id,
-    value: this._getValue(id, _default),
+    value: this._getValue(id),
   });
   var text  = this._create('textarea', attrs);
   label = this._label(id, label);
@@ -894,9 +894,8 @@ bp._setAttrs = function(elem, attrs) {
   return elem;
 };
 
-bp._getValue = function(id, _default) {
-  var value = this._dialog.settings[id];
-  return (typeof value == 'undefined') ? _default : value;
+bp._getValue = function(id) {
+  return this._dialog.settings[id];
 };
 
 bp._parse = function(passedArgs, fromIdx) {
