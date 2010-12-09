@@ -4,7 +4,7 @@
 //
 // File    : usconfig.js
 // Author  : h1mesuke <himesuke@gmail.com>
-// Updated : 2010-12-08
+// Updated : 2010-12-09
 // Version : 1.1.2
 //
 // == Description
@@ -53,11 +53,16 @@ var Config = {
   open: function(name) { Config._open(name) },
 
   _open: function(name) {
+    var dlg = this._getDialog(name);
+    dlg.build();
+    dlg.show();
+  },
+
+  _getDialog: function(name) {
     name = (name || this.__first_defined__);
     var dlg = this.dialogs[name];
     if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
-    dlg.build();
-    dlg.show();
+    return dlg;
   },
 
   // Loads the settings associated with the dialog of the given name from the
@@ -66,35 +71,20 @@ var Config = {
   // loading, this function will return the defautls.
   //
   load: function(name) {
-    name = (name || this.__first_defined__);
-    var dlg = this.dialogs[name];
-    if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
-
-    var settings = {};
-    dlg._initDefaults();
-    dlg.load();
-    for (var key in dlg.defaults) settings[key] = dlg.defaults[key];
-    for (var key in dlg.settings) settings[key] = dlg.settings[key];
-
-    Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS LOADED for \"" + name + "\"\n" +
-      settings.toSource());
-
-    return settings;
+    var dlg = this._getDialog(name);
+    return dlg.load();
   },
 
   // Saves the settings associated with the dialog of the given name to the
   // local storage.
   //
   save: function(settings, name) {
-    name = (name || this.__first_defined__);
-    var dlg = this.dialogs[name];
-    if (!dlg) throw "\nUSCONFIG: ERROR: DIALOG NOT DEFINED for \"" + name + "\"\n";
-    dlg.settings = settings;
-    dlg.save();
+    var dlg = this._getDialog(name);
+    dlg.save(settings);
   },
 
   center: function(frame) {
-    frame = (frame || this._frame());
+    frame = (frame || this.getFrame());
     if (!frame) return;
     var style = frame.style;
     style.top  = Math.floor((window.innerHeight - frame.offsetHeight) / 2) + 'px';
@@ -102,7 +92,7 @@ var Config = {
   },
 
   remove: function(frame) {
-    frame = (frame || this._frame(true));
+    frame = (frame || this.getFrame(true));
     if (!frame) return;
     frame.style.display = 'none';
     frame.parentNode.removeChild(frame);
@@ -110,7 +100,7 @@ var Config = {
     frame = null;
   },
 
-  _frame: function(gmc) {
+  getFrame: function(gmc) {
     var test = "@id='usconfig_frame'";
     if (gmc) test += " or @id='GM_config'";
     return document.evaluate("//iframe[" + test + "]",
@@ -181,43 +171,60 @@ Config.Dialog = function(name, buildFunc, opts) {
   delete opts.saveKey;
   this.callbacks = opts;
 
-  this.defaults = {};
-  this.settings = {};
-  this.frame = null;
+  this._initDefaults();
+  this.settings = null;
+  this.frame    = null;
 };
 
 var dp = Config.Dialog.prototype;
 
 dp.build = function() {
-  // clear the defautls every time to detect config id collisions
-  this.defaults = {};
   this.load();
+  // build the dialog' frame
   this.builder = new Config.Builder(this);
   this._build();
-  // build the dialog really
 };
 
 dp._initDefaults = function() {
-  // clear the defautls every time to detect config id collisions
   this.defaults = {};
-  this.builder = new Config.DummyBuilder(this);
+  // initialize this.defaults
+  this.builder = new Config.DefaultsBuilder(this);
   this._build();
-  // NOTE: Most of DummyBuilder's methods are fake and only set each control's
-  // default value to this.defaults.
 };
 
 dp.load = function() {
+  var savedInJSON = false;
+  var userSettings;
   var data = GM_getValue(this.saveKey, '{}');
   try {
-    this.settings = JSON.parse(data);
+    userSettings = JSON.parse(data);
+    savedInJSON = true;
   } catch(e) {
-    this.settings = (new Function("return (" + data + ")"))();
+    userSettings = (new Function("return (" + data + ")"))();
+  }
+  // merge
+  this.settings = {};
+  for (var key in this.defaults) {
+    this.settings[key] = this.defaults[key];
+  }
+  for (var key in userSettings) {
+    this.settings[key] = userSettings[key];
+  }
+
+  if (!savedInJSON) {
     // try to re-save in JSON immediately
     JSON && JSON.stringify && this.save();
   }
+  Config.debug && GM_log("\nUSCONFIG: DEBUG: SETTINGS LOADED for \"" + name + "\"\n" +
+    this.settings.toSource());
+
+  return this.settings;
 };
 
-dp.save = function() {
+dp.save = function(settings) {
+  if (typeof settings == 'object') {
+    this.settings = settings;
+  }
   var data = (JSON && JSON.stringify) ? JSON.stringify(this.settings) : this.settings.toSource();
   GM_setValue(this.saveKey, data);
 
@@ -228,7 +235,7 @@ dp.save = function() {
 dp.show = function() {
   if (!this.frame) return;
   this.frame.addEventListener('load', this._show, false);
-  this.frame.src = "about:blank"; // fire
+  this.frame.src = "about:blank"; // fire!
 };
 
 dp.center = function() {
@@ -372,7 +379,7 @@ var bp = Config.Builder.prototype;
 //
 bp.dialog = function(title /* , [attrs,] sections... */) {
   // exclusive control
-  var frame = Config._frame(true);
+  var frame = Config.getFrame(true);
   if (frame) {
     var style = frame.style;
     if (style.display == 'none' || style.opacity == '0') {
@@ -623,7 +630,6 @@ bp.button = function(label, id /* , [attrs,] onclick, [tooltip] */) {
 // Creates a checkbox.
 //
 bp.checkbox = function(label, id, _default /* , [attrs,] [tooltip] */) {
-  this._setDefault(id, _default);
   var args = this._parse(arguments, 3);
   var attrs = args.attrs;
   if (args.str) attrs.title = args.str;
@@ -651,7 +657,6 @@ bp.checkbox = function(label, id, _default /* , [attrs,] [tooltip] */) {
 // mutually exclusive.
 //
 bp.radio = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
-  this._setDefault(id, _default);
   var args = this._parse(arguments, 4);
   var attrs = args.attrs;
   if (args.str) attrs.title = args.str;
@@ -686,7 +691,6 @@ bp.radio = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
 // Creates a select control.
 //
 bp.select = function(label, id, options, _default /* , [attrs,] [tooltip] */) {
-  this._setDefault(id, _default);
   var args = this._parse(arguments, 4);
   var attrs = args.attrs;
   if (args.str) attrs.title = args.str;
@@ -730,7 +734,6 @@ bp.text = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc] *
 };
 
 bp._text = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc] */) {
-  this._setDefault(id, _default);
   var args = this._parse(arguments, 3);
   var attrs = { size: 6 };
   this._merge(attrs, args.attrs);
@@ -782,7 +785,6 @@ bp.number = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc]
 // Creates a textarea.
 //
 bp.textarea = function(label, id, _default /* , [attrs,] [tooltip,] [validateFunc] */) {
-  this._setDefault(id, _default);
   var args = this._parse(arguments, 3);
   var attrs = { cols: 8, rows: 4 };
   this._merge(attrs, args.attrs);
@@ -890,14 +892,6 @@ bp._setAttrs = function(elem, attrs) {
     }
   }
   return elem;
-};
-
-bp._setDefault = function(id, _default) {
-  var defaults = this._dialog.defaults;
-  if (typeof defaults[id] != 'undefined') {
-    throw "\nUSCONFIG: SYNTAX ERROR: CONFIG ID CONFLICTED at \"" + id + "\"\n";
-  }
-  defaults[id] = _default;
 };
 
 bp._getValue = function(id, _default) {
@@ -1169,16 +1163,20 @@ bp._style = function(theme, gap) {
 delete bp;
 
 //--------------------------------------
-// DummyBuilder
+// DefaultsBuilder
 
-Config.DummyBuilder = function(dlg) {
+// NOTE: DefaultsBuilder is a dummy builder to collect default values of
+// settings. Most of methods are fake and only set each control's default
+// value to this.defaults.
+
+Config.DefaultsBuilder = function(dlg) {
   this._dialog = dlg;
 };
 
-Config.DummyBuilder.prototype = new Config.Builder();
-Config.DummyBuilder.prototype.constructor = Config.DummyBuilder;
+Config.DefaultsBuilder.prototype = new Config.Builder();
+Config.DefaultsBuilder.prototype.constructor = Config.DefaultsBuilder;
 
-var dbp = Config.DummyBuilder.prototype;
+var dbp = Config.DefaultsBuilder.prototype;
 
 dbp.nop = function() {};
 dbp.dialog = dbp.section = dbp.grid = dbp.button = dbp.staticText = dbp.nop;
@@ -1188,6 +1186,14 @@ dbp.text = dbp.integer = dbp.number = dbp.textarea = dbp.checkbox;
 
 dbp.radio = function(label, id, options, _default) { this._setDefault(id, _default); };
 dbp.select = dbp.radio;
+
+dbp._setDefault = function(id, _default) {
+  var defaults = this._dialog.defaults;
+  if (typeof defaults[id] != 'undefined') {
+    throw "\nUSCONFIG: SYNTAX ERROR: CONFIG ID CONFLICTED at \"" + id + "\"\n";
+  }
+  defaults[id] = _default;
+};
 
 delete dbp;
 
