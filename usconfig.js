@@ -1183,18 +1183,25 @@ var dbp = Config.DefaultsBuilder.prototype;
 dbp.nop = function() {};
 dbp.dialog = dbp.section = dbp.grid = dbp.button = dbp.staticText = dbp.nop;
 
-dbp.checkbox = function(label, id, _default) { this._setDefault(id, _default); };
+dbp.checkbox = function(label, id, _default) {
+  this._checkID(id);
+  this._dialog.defaults[id] = _default;
+};
 dbp.text = dbp.integer = dbp.number = dbp.textarea = dbp.checkbox;
 
-dbp.radio = function(label, id, options, _default) { this._setDefault(id, _default); };
+dbp.radio = function(label, id, options, _default) {
+  this._checkID(id);
+  if (typeof _default == 'number' && 0 <= _default && _default < options.length) {
+    _default = options[_default | 0] // floor
+  }
+  this._dialog.defaults[id] = _default;
+};
 dbp.select = dbp.radio;
 
-dbp._setDefault = function(id, _default) {
-  var defaults = this._dialog.defaults;
-  if (typeof defaults[id] != 'undefined') {
+dbp._checkID = function(id) {
+  if (typeof this._dialog.defaults[id] != 'undefined') {
     throw "\nUSCONFIG: SYNTAX ERROR: CONFIG ID CONFLICTED at \"" + id + "\"\n";
   }
-  defaults[id] = _default;
 };
 
 delete dbp;
