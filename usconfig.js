@@ -1144,6 +1144,9 @@ bp._style = function(theme, gap) {
       display: inline-block;
       margin-right: <%gap%>px;
     }
+    #save_button, #cancel_button {
+      min-width: 6em;
+    }
     #reset_button {
       float: left;
       margin-left: <%gap%>px;
