@@ -100,9 +100,9 @@ var Config = {
     frame = null;
   },
 
-  getFrame: function(gmc) {
+  getFrame: function(gmcAware) {
     var test = "@id='usconfig_frame'";
-    if (gmc) test += " or @id='GM_config'";
+    if (gmcAware) test += " or @id='GM_config'";
     return document.evaluate("//iframe[" + test + "]",
       document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
   },
